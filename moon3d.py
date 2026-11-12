@@ -24,7 +24,7 @@ def latlon_to_xyz(lat_deg, lon_deg, r=1.0):
             r * np.sin(lat))
 
 
-def make_moon_figure(sun_vecs, earth_vecs, labels, sites):
+def make_moon_figure(sun_vecs, earth_vecs, labels, sites, n_lat=30, n_lon=60):
     """
     sun_vecs, earth_vecs : arrays (N, 3), unit vectors in the Moon-fixed frame
     labels               : N strings (one date label per animation frame)
@@ -33,8 +33,8 @@ def make_moon_figure(sun_vecs, earth_vecs, labels, sites):
     n_frames = len(labels)
 
     # The Moon's surface: a grid of points on a sphere
-    lat = np.radians(np.linspace(-90, 90, 50))
-    lon = np.radians(np.linspace(-180, 180, 100))
+    lat = np.radians(np.linspace(-90, 90, n_lat))
+    lon = np.radians(np.linspace(-180, 180, n_lon))
     LON, LAT = np.meshgrid(lon, lat)
     X, Y, Z = np.cos(LAT) * np.cos(LON), np.cos(LAT) * np.sin(LON), np.sin(LAT)
 
@@ -72,7 +72,7 @@ def make_moon_figure(sun_vecs, earth_vecs, labels, sites):
                               hoverinfo="text", name="Sites")
 
     rng = np.random.default_rng(1)                      # fixed seed = same stars every time
-    s = rng.normal(size=(500, 3))
+    s = rng.normal(size=(300, 3))
     s = 2.3 * s / np.linalg.norm(s, axis=1, keepdims=True)
     stars = go.Scatter3d(x=s[:, 0], y=s[:, 1], z=s[:, 2], mode="markers",
                          marker=dict(size=1.6, color="white", opacity=0.8),

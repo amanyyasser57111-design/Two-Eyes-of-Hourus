@@ -135,6 +135,7 @@ st.write("Compare when the Sun (power) and Earth (communication) are above the h
 start = st.sidebar.date_input("Start date", value=date(2026, 12, 1))
 days = st.sidebar.slider("Days to show", 5, 60, 30)
 st.sidebar.caption("One lunar day is about 29.5 Earth days.")
+smooth = st.sidebar.checkbox("Smooth 3D animation (slower)", value=False)
 
 try:
     left, right = st.columns(2)
@@ -153,10 +154,12 @@ st.header("🌑 The Moon in motion")
 st.caption("Press Play. Bright = sunlit, dark = night. The yellow dot is the Sun and the blue dot is Earth "
            "(not to scale). Drag to rotate, scroll to zoom. Your two sites are the marked diamonds.")
 try:
-    sun_v, earth_v, labels = directions(start, days)
+    frames_n = 90 if smooth else 40
+    sun_v, earth_v, labels = directions(start, days, frames_n)
     sites = [(f"A: {site_a[0]}", site_a[1], site_a[2], "#ff4d6d"),
              (f"B: {site_b[0]}", site_b[1], site_b[2], "#00e5ff")]
-    st.plotly_chart(make_moon_figure(sun_v, earth_v, labels, sites), use_container_width=True)
+    st.plotly_chart(make_moon_figure(sun_v, earth_v, labels, sites,
+                         n_lat=50 if smooth else 30, n_lon=100 if smooth else 60), use_container_width=True)
 except Exception as e:
     st.error("The 3D Moon failed. Copy this message and send it to Claude:")
     st.code(repr(e))
