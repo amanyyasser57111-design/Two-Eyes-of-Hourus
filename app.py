@@ -1,7 +1,13 @@
 
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+
+# pyright: reportMissingImports=false
+try:
+    import plotly.express as px
+except ImportError:
+    px = None
+    import altair as alt
 
 st.set_page_config(
     page_title="HORUS | Lunar Navigator",
