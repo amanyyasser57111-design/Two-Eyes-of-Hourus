@@ -19,7 +19,8 @@ STEP_HOURS = 2   # the app calculates one point every 2 hours
 
 # --- 1. THE SITES (Curated from NASA Artemis/CLPS, LROC QuickMap & CSA) ---
 # Format: "Site Name": (latitude_deg, longitude_deg, default_terrain_horizon_deg, mission_context)
-# Note: South pole sites experience local crater rim obstructions (~1.5° to 3.0°),
+# IMPORTANT: the terrain horizon numbers below are PLACEHOLDER ESTIMATES, not measurements.
+# Replace them with values you read from Quickmap / Moon Trek. South pole sites have rim obstructions,
 # whereas equatorial maria (Apollo) have near-flat horizons (~0.0°).
 SITES = {
     "Shackleton Crater Rim (South Pole)": (
@@ -61,7 +62,7 @@ CUSTOM = "Custom coordinates"
 @st.cache_resource
 def load_data():
     """Loads official NASA/JPL DE421 planetary ephemerides and lunar libration kernels
-    (the programmatic engine powering NASA's JPL Horizons System)."""
+    (from the same family of JPL ephemerides that the Horizons System serves)."""
     loader = Loader("skyfield_data")
     ts = loader.timescale()
     eph = loader("de421.bsp")               # NASA/JPL DE421 Sun, Earth, Moon positions
@@ -201,15 +202,16 @@ def site_panel(label, default_index, start, days, idx):
     # Direct deep-links to NASA QuickMap & Moon Trek centered on the exact site coordinates
     quickmap_url = f"https://quickmap.lroc.asu.edu/?extent={lon-1},{lat-1},{lon+1},{lat+1}&proj=22"
     moontrek_url = f"https://trek.nasa.gov/moon/#v=0.1&x={lon}&y={lat}&z=7"
+    st.caption("If a link does not land on the right spot, open the site from the sources list below and search these coordinates.")
     st.markdown(f"🔍 Inspect terrain & elevation profile: [Open in NASA LROC QuickMap ↗]({quickmap_url}) · [Open in NASA Moon Trek ↗]({moontrek_url})")
 
     # Terrain Horizon Mask Slider (simulates LOLA/QuickMap crater rim obstruction)
     horizon_deg = st.slider(
-        "Local terrain horizon mask (° above flat sphere)",
+        "Terrain horizon mask (° above flat; assumed value)",
         min_value=0.0, max_value=10.0, value=float(default_horizon), step=0.1,
         key=label + "horizon",
-        help="Simulates surrounding crater rims/mountains measured via NASA LOLA / QuickMap. "
-             "At the South Pole, a 2° crater rim can block low-angle sunlight for days."
+        help="PLACEHOLDER default, not a measurement. Replace it with the rim angle you read from Quickmap / Moon Trek (LOLA terrain). "
+             "At the South Pole, a 2° rim can block low-angle sunlight for days."
     )
 
     df = compute(lat, lon, start, days)
@@ -278,11 +280,11 @@ st.title("🌙 Lunar Landing Site Navigator")
 st.write("Rapid trade-off analysis for **NASA Artemis / CLPS** and **international partner (CSA)** lunar missions: "
          "compare solar power and direct-to-Earth communication windows across candidate sites and launch dates.")
 
-with st.expander("📖 How this connects to NASA & CSA Data Resources"):
+with st.expander("📖 Data sources and how each one is used"):
     st.markdown("""
-- **NASA/JPL Horizons & DE421 Ephemeris Engine:** All Sun and Earth elevation/azimuth angles are computed using official NASA/JPL `DE421` planetary ephemeris and `MOON_ME_DE421` libration kernels—the exact mathematical engine behind JPL Horizons.
-- **NASA LROC QuickMap & Moon Trek Integration:** Because South Pole craters create severe shadows, use the **Local terrain horizon mask** slider (and the direct **QuickMap / Moon Trek** links in each panel) to model how surrounding crater walls block low-angle sunlight and Earth line-of-sight.
-- **International Lunar Exploration Context (NASA & CSA):** Built to support agile mission planning for commercial landers (CLPS), Artemis surface operations, and international rover partnerships (such as the Canadian Space Agency's lunar rover initiatives).
+- **[JPL Horizons](https://ssd.jpl.nasa.gov/horizons/)**: NASA/JPL's ephemeris service. We compute Sun and Earth directions from the Moon with JPL's DE421 ephemeris and lunar libration (wobble) data, the same family of data Horizons serves, and use Horizons as the reference to check our numbers.
+- **[LROC Quickmap](https://quickmap.lroc.asu.edu/)** and **[NASA Moon Trek](https://trek.nasa.gov/moon/)**: used to inspect south pole terrain (LOLA elevation) and read how high crater rims rise above each site. That angle feeds the terrain horizon mask.
+- **[CSA Moon Exploration](https://www.asc-csa.gc.ca/eng/astronomy/moon-exploration/)**: background on Canada's role in lunar missions and Artemis, which frames the mission-planning use case.
 """)
 
 start = st.sidebar.date_input("Mission Start Date", value=date(2026, 12, 1),
@@ -322,6 +324,7 @@ except Exception as e:
     st.code(repr(e))
 
 # --- 8. DATA SOURCES & METHODOLOGY ---------------------------------
-st.info("**Data & Engineering Notes:** Ephemerides and lunar libration are computed via NASA/JPL `DE421` SPICE kernels. "
-        "The **Local terrain horizon mask** approximates isotropic rim obstructions; for azimuth-specific 360° horizon profiles, "
-        "click the **NASA LROC QuickMap** or **Moon Trek** links in each site panel to inspect LOLA digital elevation models.")
+st.info("**Method and limits:** Sun and Earth positions use NASA/JPL DE421 with lunar libration. "
+        "The terrain mask is a single assumed angle in every direction. It is not a measured 360° horizon, "
+        "so treat daylight and comms numbers as estimates until the angles are read from LOLA terrain data. "
+        "Site coordinates are approximate.")
